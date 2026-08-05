@@ -130,16 +130,19 @@ The project automatically generates:
 
 ---
 
-## 📷 Screenshots
+## 📸 Screenshots
 
-> Add screenshots of the generated charts and interactive map inside the `screenshots/` folder.
+### Dashboard
+![Dashboard](screenshots/dashboard.png)
 
-Example:
+### Interactive Map
+![Interactive Map](screenshots/popup.png)
 
-- Dashboard
-- ML Model Output
-- Interactive Map
-- Feature Importance
+### Hourly Demand Analysis
+![Hourly Demand](screenshots/hourly_demand.png)
+
+### ML Model Output
+![ML Model](screenshots/ml_model.png)
 
 ---
 
