@@ -1,0 +1,79 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<title>RideIQ - NCR (Delhi) Taxi Analytics</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Arial,sans-serif}
+#map{height:100vh;width:100vw}
+#pn{position:absolute;top:14px;left:14px;z-index:1000;background:white;border-radius:12px;
+  padding:14px;box-shadow:0 2px 16px rgba(0,0,0,.15);width:230px}
+h2{font-size:14px;font-weight:700;margin-bottom:2px}
+.sub{font-size:10px;color:#999;margin-bottom:10px}
+.sr{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f5f5f5;font-size:11px}
+.sr:last-child{border:none} .sk{color:#999} .sv{font-weight:600}
+.leg{position:absolute;bottom:20px;left:14px;z-index:1000;background:white;
+  border-radius:10px;padding:10px 13px;box-shadow:0 2px 12px rgba(0,0,0,.12)}
+.leg h4{font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.4px;margin-bottom:7px}
+.li{display:flex;align-items:center;gap:7px;font-size:10px;color:#666;margin:3px 0}
+.ld{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+#hp{position:absolute;bottom:20px;right:14px;z-index:1000;background:white;
+  border-radius:10px;padding:12px 14px;box-shadow:0 2px 12px rgba(0,0,0,.12);width:250px}
+#hp h4{font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.4px;margin-bottom:7px}
+.br{display:flex;align-items:center;gap:5px;margin:2px 0}
+.bh{font-size:9px;color:#aaa;width:22px;text-align:right;flex-shrink:0}
+.bg{flex:1;background:#f0f0f0;border-radius:2px;height:8px}
+.bf{height:8px;border-radius:2px;background:#378ADD}.bf.pk{background:#D85A30}
+.bc{font-size:9px;color:#bbb;width:30px}
+.tr{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #f8f8f8;font-size:11px}
+.tr:last-child{border:none} .tk{color:#999} .tv{font-weight:600}
+</style></head><body>
+<div id="map"></div>
+<div id="pn">
+  <h2>RideIQ</h2>
+<div class="sub" style="font-size:12px;color:#666;margin-bottom:10px;">
+    NCR (Delhi) Taxi Analytics
+</div>
+  <div class="sub">150,000 rides · Real Data</div>
+  <div class="sr"><span class="sk">Total rides</span><span class="sv">150,000</span></div>
+  <div class="sr"><span class="sk">Completed</span><span class="sv" style="color:#1D9E75">62.0%</span></div>
+  <div class="sr"><span class="sk">Avg fare</span><span class="sv">₹ 508</span></div>
+  <div class="sr"><span class="sk">Avg distance</span><span class="sv">26.0 km</span></div>
+  <div class="sr"><span class="sk">Driver rating</span><span class="sv">4.23</span></div>
+  <div class="sr"><span class="sk">Pool opportunity</span><span class="sv" style="color:#1D9E75">15.4%</span></div>
+  <div class="sr"><span style="font-size:9px;color:#ccc">Click circles for zone details</span></div>
+</div>
+<div class="leg">
+  <h4>Pool Opportunity</h4>
+  <div class="li"><div class="ld" style="background:#1D9E75"></div>High (>50%)</div>
+  <div class="li"><div class="ld" style="background:#EF9F27"></div>Medium (30-50%)</div>
+  <div class="li"><div class="ld" style="background:#D85A30"></div>Low (<30%)</div>
+  <div style="margin-top:7px;font-size:9px;color:#ccc">Circle size = ride volume</div>
+</div>
+<div id="hp"><h4>Rides by Hour</h4><div id="hb"></div></div>
+<script>
+const zones=[{"name": "Khandsa", "lat": 28.4354, "lon": 76.99, "total": 949, "completed": 600, "comp_pct": 63.2, "avg_fare": 515.0, "avg_km": 26.1, "pool_rate": 16.5, "avg_rating": 4.23}, {"name": "Barakhamba Road", "lat": 28.6289, "lon": 77.2274, "total": 946, "completed": 594, "comp_pct": 62.8, "avg_fare": 521.0, "avg_km": 24.9, "pool_rate": 17.5, "avg_rating": 4.23}, {"name": "Saket", "lat": 28.5244, "lon": 77.209, "total": 931, "completed": 557, "comp_pct": 59.8, "avg_fare": 458.0, "avg_km": 25.9, "pool_rate": 15.1, "avg_rating": 4.25}, {"name": "Badarpur", "lat": 28.5007, "lon": 77.2832, "total": 921, "completed": 567, "comp_pct": 61.6, "avg_fare": 526.0, "avg_km": 25.8, "pool_rate": 16.5, "avg_rating": 4.2}, {"name": "Pragati Maidan", "lat": 28.6177, "lon": 77.2439, "total": 920, "completed": 538, "comp_pct": 58.5, "avg_fare": 503.0, "avg_km": 26.8, "pool_rate": 13.5, "avg_rating": 4.19}, {"name": "Madipur", "lat": 28.663, "lon": 77.113, "total": 919, "completed": 579, "comp_pct": 63.0, "avg_fare": 489.0, "avg_km": 25.6, "pool_rate": 16.1, "avg_rating": 4.23}, {"name": "AIIMS", "lat": 28.5685, "lon": 77.209, "total": 918, "completed": 562, "comp_pct": 61.2, "avg_fare": 527.0, "avg_km": 26.0, "pool_rate": 15.7, "avg_rating": 4.21}, {"name": "Mehrauli", "lat": 28.5221, "lon": 77.1867, "total": 915, "completed": 574, "comp_pct": 62.7, "avg_fare": 482.0, "avg_km": 26.0, "pool_rate": 14.8, "avg_rating": 4.22}, {"name": "Dwarka Sector 21", "lat": 28.5521, "lon": 77.0588, "total": 914, "completed": 565, "comp_pct": 61.8, "avg_fare": 509.0, "avg_km": 26.4, "pool_rate": 15.0, "avg_rating": 4.21}, {"name": "Pataudi Chowk", "lat": 28.3986, "lon": 76.995, "total": 907, "completed": 556, "comp_pct": 61.3, "avg_fare": 552.0, "avg_km": 25.8, "pool_rate": 15.0, "avg_rating": 4.22}, {"name": "Shivaji Park", "lat": 28.641, "lon": 77.217, "total": 900, "completed": 561, "comp_pct": 62.3, "avg_fare": 511.0, "avg_km": 27.3, "pool_rate": 12.7, "avg_rating": 4.23}, {"name": "Tilak Nagar", "lat": 28.6413, "lon": 77.0986, "total": 900, "completed": 556, "comp_pct": 61.8, "avg_fare": 512.0, "avg_km": 25.9, "pool_rate": 15.3, "avg_rating": 4.29}, {"name": "Udyog Vihar", "lat": 28.5056, "lon": 77.086, "total": 897, "completed": 539, "comp_pct": 60.1, "avg_fare": 540.0, "avg_km": 26.0, "pool_rate": 15.6, "avg_rating": 4.25}, {"name": "Kanhaiya Nagar", "lat": 28.685, "lon": 77.168, "total": 895, "completed": 572, "comp_pct": 63.9, "avg_fare": 481.0, "avg_km": 25.6, "pool_rate": 17.4, "avg_rating": 4.24}, {"name": "Vishwavidyalaya", "lat": 28.6893, "lon": 77.2147, "total": 895, "completed": 554, "comp_pct": 61.9, "avg_fare": 510.0, "avg_km": 26.4, "pool_rate": 16.1, "avg_rating": 4.22}, {"name": "Greater Kailash", "lat": 28.5386, "lon": 77.2419, "total": 895, "completed": 555, "comp_pct": 62.0, "avg_fare": 487.0, "avg_km": 26.1, "pool_rate": 14.5, "avg_rating": 4.24}, {"name": "Tagore Garden", "lat": 28.6522, "lon": 77.1133, "total": 889, "completed": 544, "comp_pct": 61.2, "avg_fare": 515.0, "avg_km": 25.3, "pool_rate": 16.3, "avg_rating": 4.23}, {"name": "Inderlok", "lat": 28.6742, "lon": 77.1755, "total": 887, "completed": 559, "comp_pct": 63.0, "avg_fare": 530.0, "avg_km": 26.1, "pool_rate": 15.7, "avg_rating": 4.24}, {"name": "Subhash Chowk", "lat": 28.45, "lon": 76.998, "total": 887, "completed": 582, "comp_pct": 65.6, "avg_fare": 514.0, "avg_km": 25.7, "pool_rate": 15.9, "avg_rating": 4.24}, {"name": "Jasola", "lat": 28.5352, "lon": 77.2874, "total": 887, "completed": 543, "comp_pct": 61.2, "avg_fare": 510.0, "avg_km": 25.6, "pool_rate": 15.8, "avg_rating": 4.23}, {"name": "Malviya Nagar", "lat": 28.531, "lon": 77.209, "total": 885, "completed": 557, "comp_pct": 62.9, "avg_fare": 498.0, "avg_km": 27.0, "pool_rate": 13.9, "avg_rating": 4.25}, {"name": "Hauz Khas", "lat": 28.5535, "lon": 77.204, "total": 876, "completed": 553, "comp_pct": 63.1, "avg_fare": 516.0, "avg_km": 25.4, "pool_rate": 15.5, "avg_rating": 4.23}],hourly={"0": 1373, "1": 1360, "2": 1339, "3": 1383, "4": 1321, "5": 2786, "6": 4160, "7": 5450, "8": 6861, "9": 8234, "10": 9577, "11": 8390, "12": 7006, "13": 5470, "14": 7031, "15": 8202, "16": 9633, "17": 11044, "18": 12397, "19": 11047, "20": 9630, "21": 8103, "22": 5441, "23": 2762};
+const map=L.map('map').setView([28.568559090909094,77.16042727272726],12);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+  {attribution:'OpenStreetMap / CARTO',maxZoom:18}).addTo(map);
+const gc=p=>p>=50?'#1D9E75':p>=30?'#EF9F27':'#D85A30';
+zones.forEach(z=>{const r=Math.max(300,z.total*2);
+  const c=L.circle([z.lat,z.lon],{radius:r,color:'white',fillColor:gc(z.pool_rate),
+    fillOpacity:0.72,weight:2}).addTo(map);
+  c.bindPopup(`<div style="min-width:160px">
+    <b style="font-size:13px">${z.name}</b><hr style="margin:5px 0">
+    <div class="tr"><span class="tk">Total rides</span><span class="tv">${z.total.toLocaleString()}</span></div>
+    <div class="tr"><span class="tk">Completed</span><span class="tv" style="color:#1D9E75">${z.comp_pct}%</span></div>
+    <div class="tr"><span class="tk">Avg fare</span><span class="tv">₹ ${z.avg_fare}</span></div>
+    <div class="tr"><span class="tk">Avg distance</span><span class="tv">${z.avg_km} km</span></div>
+    <div class="tr"><span class="tk">Pool rate</span><span class="tv" style="color:#1D9E75">${z.pool_rate}%</span></div>
+    ${z.avg_rating?`<div class="tr"><span class="tk">Avg rating</span><span class="tv">${z.avg_rating}</span></div>`:''} 
+  </div>`,{maxWidth:200});
+  c.bindTooltip(z.name,{permanent:true,direction:'center'});
+});
+const hb=document.getElementById('hb');
+const mx=Math.max(...Object.values(hourly));
+[...Array(24).keys()].forEach(h=>{const v=hourly[h]||0;
+  hb.innerHTML+=`<div class="br"><span class="bh">${h}h</span>
+  <div class="bg"><div class="bf ${[8,9,17,18,19].includes(h)?'pk':''}" style="width:${Math.round(v/mx*100)}%"></div></div>
+  <span class="bc">${(v/1000).toFixed(1)}k</span></div>`;});
+</script></body></html>

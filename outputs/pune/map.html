@@ -1,0 +1,79 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<title>RideIQ - Pune Taxi Analytics</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Arial,sans-serif}
+#map{height:100vh;width:100vw}
+#pn{position:absolute;top:14px;left:14px;z-index:1000;background:white;border-radius:12px;
+  padding:14px;box-shadow:0 2px 16px rgba(0,0,0,.15);width:230px}
+h2{font-size:14px;font-weight:700;margin-bottom:2px}
+.sub{font-size:10px;color:#999;margin-bottom:10px}
+.sr{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f5f5f5;font-size:11px}
+.sr:last-child{border:none} .sk{color:#999} .sv{font-weight:600}
+.leg{position:absolute;bottom:20px;left:14px;z-index:1000;background:white;
+  border-radius:10px;padding:10px 13px;box-shadow:0 2px 12px rgba(0,0,0,.12)}
+.leg h4{font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.4px;margin-bottom:7px}
+.li{display:flex;align-items:center;gap:7px;font-size:10px;color:#666;margin:3px 0}
+.ld{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+#hp{position:absolute;bottom:20px;right:14px;z-index:1000;background:white;
+  border-radius:10px;padding:12px 14px;box-shadow:0 2px 12px rgba(0,0,0,.12);width:250px}
+#hp h4{font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.4px;margin-bottom:7px}
+.br{display:flex;align-items:center;gap:5px;margin:2px 0}
+.bh{font-size:9px;color:#aaa;width:22px;text-align:right;flex-shrink:0}
+.bg{flex:1;background:#f0f0f0;border-radius:2px;height:8px}
+.bf{height:8px;border-radius:2px;background:#378ADD}.bf.pk{background:#D85A30}
+.bc{font-size:9px;color:#bbb;width:30px}
+.tr{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #f8f8f8;font-size:11px}
+.tr:last-child{border:none} .tk{color:#999} .tv{font-weight:600}
+</style></head><body>
+<div id="map"></div>
+<div id="pn">
+  <h2>RideIQ</h2>
+<div class="sub" style="font-size:12px;color:#666;margin-bottom:10px;">
+    Pune Taxi Analytics
+</div>
+  <div class="sub">10,000 rides · Real Data</div>
+  <div class="sr"><span class="sk">Total rides</span><span class="sv">10,000</span></div>
+  <div class="sr"><span class="sk">Completed</span><span class="sv" style="color:#1D9E75">61.7%</span></div>
+  <div class="sr"><span class="sk">Avg fare</span><span class="sv">₹ 275</span></div>
+  <div class="sr"><span class="sk">Avg distance</span><span class="sv">12.2 km</span></div>
+  <div class="sr"><span class="sk">Driver rating</span><span class="sv">4.2</span></div>
+  <div class="sr"><span class="sk">Pool opportunity</span><span class="sv" style="color:#1D9E75">37.5%</span></div>
+  <div class="sr"><span style="font-size:9px;color:#ccc">Click circles for zone details</span></div>
+</div>
+<div class="leg">
+  <h4>Pool Opportunity</h4>
+  <div class="li"><div class="ld" style="background:#1D9E75"></div>High (>50%)</div>
+  <div class="li"><div class="ld" style="background:#EF9F27"></div>Medium (30-50%)</div>
+  <div class="li"><div class="ld" style="background:#D85A30"></div>Low (<30%)</div>
+  <div style="margin-top:7px;font-size:9px;color:#ccc">Circle size = ride volume</div>
+</div>
+<div id="hp"><h4>Rides by Hour</h4><div id="hb"></div></div>
+<script>
+const zones=[{"name": "Hadapsar", "lat": 18.5018, "lon": 73.926, "total": 376, "completed": 210, "comp_pct": 55.9, "avg_fare": 286.0, "avg_km": 12.5, "pool_rate": 33.5, "avg_rating": 4.16}, {"name": "Pimpri", "lat": 18.6279, "lon": 73.7997, "total": 370, "completed": 231, "comp_pct": 62.4, "avg_fare": 281.0, "avg_km": 12.4, "pool_rate": 38.6, "avg_rating": 4.16}, {"name": "Koregaon Park", "lat": 18.5362, "lon": 73.8931, "total": 361, "completed": 219, "comp_pct": 60.7, "avg_fare": 223.0, "avg_km": 9.5, "pool_rate": 41.3, "avg_rating": 4.22}, {"name": "Viman Nagar", "lat": 18.5679, "lon": 73.9143, "total": 360, "completed": 219, "comp_pct": 60.8, "avg_fare": 247.0, "avg_km": 10.5, "pool_rate": 40.3, "avg_rating": 4.23}, {"name": "Kothrud", "lat": 18.5074, "lon": 73.8077, "total": 344, "completed": 209, "comp_pct": 60.8, "avg_fare": 258.0, "avg_km": 11.4, "pool_rate": 41.6, "avg_rating": 4.2}, {"name": "Baner", "lat": 18.559, "lon": 73.7868, "total": 336, "completed": 206, "comp_pct": 61.3, "avg_fare": 260.0, "avg_km": 11.1, "pool_rate": 43.8, "avg_rating": 4.21}, {"name": "Hinjewadi Phase 3", "lat": 18.5912, "lon": 73.7389, "total": 336, "completed": 228, "comp_pct": 67.9, "avg_fare": 356.0, "avg_km": 16.2, "pool_rate": 23.5, "avg_rating": 4.18}, {"name": "Hinjewadi Phase 2", "lat": 18.5912, "lon": 73.7389, "total": 331, "completed": 217, "comp_pct": 65.6, "avg_fare": 327.0, "avg_km": 15.3, "pool_rate": 25.1, "avg_rating": 4.21}, {"name": "Wakad", "lat": 18.5984, "lon": 73.7611, "total": 316, "completed": 196, "comp_pct": 62.0, "avg_fare": 281.0, "avg_km": 12.8, "pool_rate": 32.9, "avg_rating": 4.25}, {"name": "Shivajinagar", "lat": 18.5308, "lon": 73.8474, "total": 314, "completed": 189, "comp_pct": 60.2, "avg_fare": 231.0, "avg_km": 9.6, "pool_rate": 46.2, "avg_rating": 4.19}, {"name": "Hinjewadi Phase 1", "lat": 18.5912, "lon": 73.7389, "total": 313, "completed": 219, "comp_pct": 70.0, "avg_fare": 304.0, "avg_km": 13.7, "pool_rate": 31.6, "avg_rating": 4.19}, {"name": "Magarpatta", "lat": 18.5146, "lon": 73.9281, "total": 310, "completed": 210, "comp_pct": 67.7, "avg_fare": 252.0, "avg_km": 11.3, "pool_rate": 44.2, "avg_rating": 4.2}, {"name": "Pune Station", "lat": 18.5293, "lon": 73.8745, "total": 308, "completed": 201, "comp_pct": 65.3, "avg_fare": 218.0, "avg_km": 9.3, "pool_rate": 47.7, "avg_rating": 4.17}, {"name": "Kalyani Nagar", "lat": 18.5477, "lon": 73.9043, "total": 307, "completed": 203, "comp_pct": 66.1, "avg_fare": 240.0, "avg_km": 9.8, "pool_rate": 50.2, "avg_rating": 4.19}, {"name": "Deccan Gymkhana", "lat": 18.5165, "lon": 73.8405, "total": 302, "completed": 193, "comp_pct": 63.9, "avg_fare": 234.0, "avg_km": 9.8, "pool_rate": 51.7, "avg_rating": 4.17}, {"name": "Aundh", "lat": 18.5582, "lon": 73.8077, "total": 295, "completed": 179, "comp_pct": 60.7, "avg_fare": 247.0, "avg_km": 10.5, "pool_rate": 50.5, "avg_rating": 4.18}],hourly={"0": 91, "1": 69, "2": 70, "3": 73, "4": 69, "5": 153, "6": 283, "7": 649, "8": 746, "9": 639, "10": 560, "11": 438, "12": 571, "13": 470, "14": 452, "15": 530, "16": 678, "17": 861, "18": 778, "19": 604, "20": 472, "21": 376, "22": 233, "23": 135};
+const map=L.map('map').setView([18.55433125,73.83174375],12);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+  {attribution:'OpenStreetMap / CARTO',maxZoom:18}).addTo(map);
+const gc=p=>p>=50?'#1D9E75':p>=30?'#EF9F27':'#D85A30';
+zones.forEach(z=>{const r=Math.max(300,z.total*2);
+  const c=L.circle([z.lat,z.lon],{radius:r,color:'white',fillColor:gc(z.pool_rate),
+    fillOpacity:0.72,weight:2}).addTo(map);
+  c.bindPopup(`<div style="min-width:160px">
+    <b style="font-size:13px">${z.name}</b><hr style="margin:5px 0">
+    <div class="tr"><span class="tk">Total rides</span><span class="tv">${z.total.toLocaleString()}</span></div>
+    <div class="tr"><span class="tk">Completed</span><span class="tv" style="color:#1D9E75">${z.comp_pct}%</span></div>
+    <div class="tr"><span class="tk">Avg fare</span><span class="tv">₹ ${z.avg_fare}</span></div>
+    <div class="tr"><span class="tk">Avg distance</span><span class="tv">${z.avg_km} km</span></div>
+    <div class="tr"><span class="tk">Pool rate</span><span class="tv" style="color:#1D9E75">${z.pool_rate}%</span></div>
+    ${z.avg_rating?`<div class="tr"><span class="tk">Avg rating</span><span class="tv">${z.avg_rating}</span></div>`:''} 
+  </div>`,{maxWidth:200});
+  c.bindTooltip(z.name,{permanent:true,direction:'center'});
+});
+const hb=document.getElementById('hb');
+const mx=Math.max(...Object.values(hourly));
+[...Array(24).keys()].forEach(h=>{const v=hourly[h]||0;
+  hb.innerHTML+=`<div class="br"><span class="bh">${h}h</span>
+  <div class="bg"><div class="bf ${[8,9,17,18,19].includes(h)?'pk':''}" style="width:${Math.round(v/mx*100)}%"></div></div>
+  <span class="bc">${(v/1000).toFixed(1)}k</span></div>`;});
+</script></body></html>
